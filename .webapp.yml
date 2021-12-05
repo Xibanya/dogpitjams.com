@@ -1,0 +1,18 @@
+base: null
+database:
+  type: mysql
+  user: null
+  password: null
+  db: null
+  host: localhost
+  prefix: null
+fortification:
+  max:
+    - file1
+    - dir/subdir/
+  min:
+    - file1
+    - file2
+    - dir/
+signature: 2bd7a66ac021fec64e49c6ab9e3d578d8c5905ed4bc1809311147a1c81c39832639094630344bbe22d782687826cc8650e493388a2855ff8dfad4330dab4a461
+manifest_version: '1.0'
