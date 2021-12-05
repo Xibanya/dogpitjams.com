@@ -1,7 +1,8 @@
 const LIBRARY_PATH = "/Library/";
 const JAMS_TABLE = "Jams";
 const RESULTS_TABLE = "Results";
-const GAMES_TABLE = "Games"
+const GAMES_TABLE = "Games";
+const GUEST_TABLE = "Guests";
 
 const JAM_NAME = 1;
 const JAM_ORGANIZER = 3;
@@ -53,15 +54,15 @@ class JamLink {
         this.Theme = row[JAM_THEME];
         this.URL = row[JAM_URL];
         this.Page = row[JAM_PAGE];
+        this.href = LIBRARY_PATH + this.URL + this.Page + ".html";
     }
 }
-class Guest {
-    constructor(row)
+class PersonLink {
+    constructor(id, name)
     {
-        this.ID = row[0];
-        this.Name = row[1];
-        this.Judge = parseInt(row[2]) == 1;
-        this.Jam = row[3];
+        this.ID = id;
+        this.Name = name;
+        this.href = `/Person.html?userid=${id}`;
     }
 }
 class Game {
@@ -75,6 +76,68 @@ class Game {
         this.Members = row[5];
         this.Jam = row[6];
         this.Score = row[GAME_SCORE];
+    }
+}
+function GetJamLink(id, db)
+{
+    var sql = `SELECT * FROM ${JAMS_TABLE} WHERE ID IS '${id}'`;
+    var jamTable = Tableify(JSON.parse(JSON.stringify(db.exec(sql))));
+    return new JamLink(jamTable[0]);
+}
+class Role {
+    constructor(name, role, gameID, db)
+    {
+        this.Name = name;
+        this.Role = role;
+        var gameQuery = `SELECT * FROM ${GAMES_TABLE} WHERE ID = ${gameID}`;
+        var gameTable = Tableify(JSON.parse(JSON.stringify(db.exec(gameQuery))));
+        this.Game = new Game(gameTable[0]);
+        this.Jam = GetJamLink(this.Game.Jam, db);
+    }
+}
+class Profile {
+    constructor(row, db)
+    {
+        this.ID = row[0];
+        this.Name = row[1];
+        this.Itch = row[2];
+        this.SA = row[3];
+        this.Judged = [];
+        this.Guested = [];
+        var guestQuery = `SELECT Jam, Judge FROM Guests WHERE UID = ${this.ID}`;
+        var guestResults = JSON.parse(JSON.stringify(db.exec(guestQuery)));
+        if (guestResults != null && guestResults.length > 0)
+        {
+            var guestTable = Tableify(guestResults);
+            for (var i = 0; i < guestTable.length; i++)
+            {
+                var sql = `SELECT * FROM ${JAMS_TABLE} WHERE ID IS '${guestTable[i][0]}'`;
+                var jamTable = Tableify(JSON.parse(JSON.stringify(db.exec(sql))));
+                for (var j = 0; j < jamTable.length; j++)
+                {
+                    var jam = new JamLink(jamTable[j]);
+                    if (guestTable[i][1] == 1) this.Judged.push(jam);
+                    else this.Guested.push(jam);
+                }
+            }
+        }
+
+        this.Games = [];
+        var jammerQuery = `SELECT GameID, Name, Role FROM Jammer WHERE UserID = ${this.ID}`;
+        var jammerResults = JSON.parse(JSON.stringify(db.exec(jammerQuery)));
+        if (jammerResults == null)
+        {
+            console.warn("Couldn't find any games made by this user.");
+            return;
+        }
+        var jammerTable = Tableify(jammerResults);
+        for (var i = 0; i < jammerTable.length; i++)
+        {
+            var row = jammerTable[i];
+            if (row[1] < 1) continue;
+            var creditedAs = row[1] != null? row[1] : this.Name;
+            this.Games.push(new Role(creditedAs, row[2], row[0], db));
+        }
     }
 }
 class Result {
@@ -130,7 +193,6 @@ class Jam {
         this.Categories = [];
         this.Entries = [];
         this.Judges = [];
-        this.Guests = [];
         if (window.location.href.includes("Library"))
         {
             var nextInt = row[10];
@@ -196,23 +258,14 @@ class Jam {
                     }
                 }
             }
-            var juds =  `SELECT * FROM Guests WHERE Jam IS '${this.ID}'`;
+            var juds =  `SELECT UID, Name FROM ${GUEST_TABLE} WHERE Jam IS '${this.ID}' AND Judge = 1`;
             var judResults = db.exec(juds);
             if (judResults != null)
             {
-                var judArr = JSON.parse(JSON.stringify(judResults));
-                if (judArr != null && judArr.length > 0)
+                var judArr = Tableify(JSON.parse(JSON.stringify(judResults)));
+                for (var judge of judArr) 
                 {
-                    var judgeTable = Tableify(judArr);
-                    if (judgeTable != null)
-                    {
-                        for (var i = 0; i < judgeTable.length; i++)
-                        {
-                            var judge = new Guest(judgeTable[i]);
-                            if (judge.Judge) this.Judges.push(judge);
-                            else this.Guests.push(judge);
-                        }
-                    }
+                    this.Judges.push(new PersonLink(judge[0], judge[1]));
                 }
             }
         }
@@ -231,5 +284,53 @@ function GetJamFromPage(db)
     if (jamPageTable != null && jamPageTable.length > 0) return new Jam(jamPageTable[0], db);
     else return null;
 }
+function URLVars() 
+{
+    var vars = {};
+    var parts = window.location.href.replace(/[?&]+([^=&]+)=([^&]*)/gi, function(m,key,value) {
+        vars[key] = value;
+    });
+    return vars;
+}
+function GetParam(parameter, defaultvalue)
+{
+    var urlparameter = defaultvalue;
+    if(window.location.href.indexOf(parameter) > -1)
+    {
+        urlparameter = URLVars()[parameter];
+    }
+    return urlparameter;
+}
+function GetProfile(db)
+{
+    var profile = null;
+    var userID = GetParam("userid", 0);
+    if (userID > 0)
+    {
+        var sql = `SELECT * FROM User WHERE ID = ${userID}`;
+        var usrResults = JSON.parse(JSON.stringify(db.exec(sql)));
+        if (usrResults != null)
+        {
+            var usrTable = Tableify(usrResults);
+            if (usrTable.length > 0) profile = new Profile(usrTable[0], db);
+        }
+    }
+    return profile;
+}
+function GetUserID(name, db)
+{
+    var sql = `SELECT ID FROM User WHERE Name = ${name} OR Itch = ${name}`;
+    var usrResults = JSON.parse(JSON.stringify(db.exec(sql)));
+    if (usrResults != null)
+    {
+        var usrTable = Tableify(usrResults);
+        if (usrTable.length > 0)
+        {
+            console.info(`${usrTable.length} matches for ${name}`);
+            return usrTable[0][0];
+        }
+    }
+    return null;
+}
 
-export { Group, Result, Jam, Tableify, GetJamFromPage };
+export { Group, Result, Jam, Tableify, GetJamFromPage, GetProfile, GetUserID };

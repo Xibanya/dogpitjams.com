@@ -33,6 +33,7 @@ window.setTimeout(function() {
                     console.info("Loaded DB");
                     IncludesDirectory();
                     AddFooter();
+                    
                 }
                 else console.log("DB Null");
             }, 200);
@@ -46,118 +47,59 @@ function IncludesDirectory()
     if (window.location.href.includes("Library")) return;
     SetTitle(TITLE);
     document.getElementById("site-title").innerText = TITLE;
+    var container = document.getElementById('main-content');
+
     var query = `SELECT * FROM ${DIRECTORIES_TABLE} ORDER BY ID ASC`;
     var dbDirectoryTable = db.exec(query);
     var table = Tableify(JSON.parse(JSON.stringify(dbDirectoryTable)));
-    var lastElement;
     for (var i = 0; i < table.length; i ++)
     {
-        var row = new Group(table[i], db);
-        if (row.Show == false) continue;
-        else if (i == 0) 
-        {
-            console.info("First element")
-            lastElement = document.getElementById(row.ElementID);
-            if (lastElement == null) 
-            {
-                console.info(`Couldn't find element ${row.ElementID}!`)
-                return;
-            }
-            var header = HeaderBefore(3, row.Name, lastElement, true);
-            var accent = document.getElementById(row.Name + "-accent");
-            InsertAfter(lastElement, accent);
-        }
-        else
-        {
-            var header = HeaderAfter(3, row.Name, lastElement, true);
-            var accent =  document.getElementById(row.Name + "-accent");
-            lastElement = DirectoryAfter(row.ElementID, accent);
-        }
-        GenerateDirectory(row, row.ElementID, row.Descripton);
-    }
-}
-function GenerateDirectory(group, elementID, description)
-{
-    if (group != null)
-    {
-        var node = document.getElementById(elementID);
+        var group = new Group(table[i], db);
+        if (group.Show == false) continue;
+        
+        var groupcontainer = document.createElement('div');
+        groupcontainer.classList = "jam-container";
+        container.appendChild(groupcontainer);
+
+        var header = document.createElement('h3');
+        header.innerText = group.Name;
+        groupcontainer.appendChild(header);
+        var accent = document.createElement('div');
+        accent.className = "accent";
+        accent.id = `${group.ElementID}-accent`;
+        groupcontainer.appendChild(accent);
+        
+        var directory = document.createElement('div');
+        directory.className = DIRECTORY_CLASS;
+        directory.id = group.ElementID;
+        groupcontainer.appendChild(directory);
+
         var desc = document.createElement('p');
-        desc.innerHTML = description;
-        node.appendChild(desc);
-        if (node != null)
+        desc.innerHTML = group.Descripton;
+        directory.appendChild(desc);
+
+        var directoryList = document.createElement('ul');
+        for (var n = 0; n < group.Jams.length; n ++)
         {
-            var increment = 0;
-            var directoryList = DirectoryList();
-            for (var i = 0; i < group.Jams.length; i ++)
+            var jam = group.Jams[n];
+            var listItem = ListItem(directoryList);
+            if (jam.Page != null)
             {
-                var row = group.Jams[i];
-                var listItem = ListItem(directoryList);
-                if (row.Page != null)
-                {
-                    var link = document.createElement('a');
-                    if (row.Page != null) link.href = LIBRARY_PATH + row.URL + row.Page + ".html";
-                    else link.href = "/";
-                    link.innerText = row.Name;
-                    listItem.appendChild(link);
-                }
-                else listItem.innerHTML += `<span>${row.Name}</span>`;
-                listItem.innerHTML += ` ${row.Theme}`
-                increment++;
+                var link = document.createElement('a');
+                if (jam.Page != null) link.href = LIBRARY_PATH + jam.URL + jam.Page + ".html";
+                else link.href = "/";
+                link.innerText = jam.Name;
+                listItem.appendChild(link);
             }
-            node.appendChild(directoryList);
+            else listItem.innerHTML += `<span>${jam.Name}</span>`;
+            listItem.innerHTML += ` ${jam.Theme}`
         }
-        else console.log("No such element " + elementID + "!");
+        directory.appendChild(directoryList);
     }
-    else console.log("Table for " + elementID + " is null!");
-}
-function DirectoryList()
-{
-    var listContainer = document.createElement('ul');
-    return listContainer;
 }
 function ListItem(parentNode)
 {
     var listItem = document.createElement('li');
     parentNode.appendChild(listItem);
     return listItem
-}
-function InsertAfter(newNode, referenceNode) 
-{
-    referenceNode.parentNode.insertBefore(newNode, referenceNode.nextSibling);
-}
-function HeaderBefore(size, title, referenceNode, withAccent)
-{
-    var header = document.createElement('h' + size);
-    header.innerText = title
-    referenceNode.parentNode.insertBefore(header, referenceNode);
-    if (withAccent)
-    {
-        var accent = document.createElement('div');
-        accent.className = "accent";
-        accent.id = `${title}-accent`;
-        InsertAfter(accent, header);
-    }
-    return header;
-}
-function HeaderAfter(size, title, referenceNode, withAccent)
-{
-    var header = document.createElement('h' + size);
-    header.innerText = title
-    InsertAfter(header, referenceNode);
-    if (withAccent)
-    {
-        var accent = document.createElement('div');
-        accent.className = "accent";
-        accent.id = `${title}-accent`;
-        InsertAfter(accent, header);
-    }
-    return header;
-}
-function DirectoryAfter(uniqueID, referenceNode)
-{
-    var directory = document.createElement('div');
-    directory.id = uniqueID;
-    directory.className = DIRECTORY_CLASS;
-    InsertAfter(directory, referenceNode);
-    return directory;
 }

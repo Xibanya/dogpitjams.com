@@ -62,10 +62,36 @@ div.accent-small
 h1,h2 { padding-left: 0; }
 h3,h4,h5,h6 { padding-left: 1em; }
 
-h3.subheading {
+h1.jamheading {
+    font-size: 3em;
+}
+
+h3.themeheading {
+    margin-top: 2px;
     font-style: italic;
     color: var(--type);
+    font-size: 1.5em;
+}
+
+.jamsubtitle {
+    font-style: italic;
+    margin-top: 6px;
+    font-weight: lighter;
+    color: var(--header);
+}
+
+div.jam-container {
+    margin-bottom: 1em;
+    max-width: fit-content;
+    min-width: 512px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+h3.subheading {    
     margin-top: 2px;
+    font-style: italic;
+    color: var(--type);
 }
 h3.winner {
     padding-left: 0;
@@ -80,6 +106,14 @@ span.subspan {
     font-weight: lighter;
     font-style: italic;
     margin-left: 1em;
+}
+footer > .subheading {
+    font-style: italic;
+    color: var(--type);
+    font-weight: lighter;
+    font-style: italic;
+    font-size: smaller;
+    text-shadow: 0 0 2px #001716, 0 0 3px #03edf975, 0 0 5px #03edf975, 0 0 8px #03edf975;
 }
 
 /* Links */
@@ -99,6 +133,11 @@ a:hover { text-decoration: underline; }
     padding-left: 1em;
     margin-top: 0px; 
     color:  #6d77b3;
+    padding-right: 1em;
+    max-width: 1024px;
+    margin-left: auto;
+    margin-right: auto;
+    margin-bottom: 1em;
 }
 .directory a, .subdirectory a, .directory span
 {
@@ -211,8 +250,9 @@ footer > span.source
 }
 footer > span.center 
 {
-    /*padding-left: 2em;*/
+    padding-left: 0px;
     padding-right: 0.5em;
+    margin-right: 1em;
     font-size: 115%;
 }
 footer > span.links 
@@ -362,3 +402,9 @@ input[type=text], select, textarea {
   input[type=submit]:hover {
     background-color: var(--directive);
   }
+.game-item {
+    font-size: 130%;
+}
+.profile-result {
+    margin-bottom: 0.5em;
+}

@@ -3,7 +3,7 @@ const URL_INDEX = `<a href="/"><i class="fa fa-home"></i></a>`;
 const URL_REPO = `<a href="${YOUTUBE}" target="new"><i class="fa fa-youtube"></i></a>`;
 const URL_DISCORD = `<a href="https://discord.gg/YvXrB62" target="new"><i class="fab fa-discord"></i></a>`;
 const URL_T = `<a href="https://twitter.com/TeamDogpit" target="new"><i class="fa fa-twitter"></i></a>`;
-const EXTERNAL_LINKS = `${URL_REPO} ${URL_T} ${URL_DISCORD}`;
+const FOOTER_LINKS = `${URL_INDEX} ${URL_REPO} ${URL_T} ${URL_DISCORD}`;
 
 function SetTitle(titleText)
 {
@@ -42,7 +42,7 @@ function AddScript(path, uniqueID)
         head.appendChild(newScript);
     }
 }
-function AddFooter()
+function AddFooter(previous = null, next = null)
 {
     var body = document.getElementsByTagName('body')[0];
     var footer = document.getElementById('footer');
@@ -60,14 +60,14 @@ function AddFooter()
         body.appendChild(footer);
         footer.id = 'footer';
     }
-    var sourceText = document.getElementById('footer-source');
-    if (sourceText == null)
+    if (previous != null)
     {
-        sourceText = document.createElement('span');
-        sourceText.id = "footer-source";
+        var sourceText = document.createElement('span');
+        sourceText.id = "footer-previous";
         footer.appendChild(sourceText);
+        sourceText.classList = "subheading";
+        sourceText.innerHTML = `<a href="${previous}">&laquo; Previous Jam</a> `;
     }
-    sourceText.classList = "hidden";
 
     var footerText = document.getElementById('footer-center');
     if (footerText == null)
@@ -77,15 +77,15 @@ function AddFooter()
         footerText.classList = "center";
         footer.appendChild(footerText);
     }
-    footerText.innerHTML = URL_INDEX;
-    
-    var linkText = document.getElementById('footer-links');
-    if (linkText == null)
+    footerText.innerHTML = FOOTER_LINKS;
+
+    if (next != null)
     {
-        linkText = document.createElement('span');
-        linkText.id = "footer-links";
-        footer.appendChild(linkText);
-        linkText.innerHTML = EXTERNAL_LINKS;
+        var nextText = document.createElement('span');
+        nextText.id = "footer-next";
+        footer.appendChild(nextText);
+        nextText.classList = "subheading";
+        nextText.innerHTML = `<a href="${next}">Next Jam &raquo;</a> `;
     }
 }
-export { SetTitle, AddFooter, AddScript, AddStyle };
+export { SetTitle, AddFooter, AddScript, AddStyle, GetParam };

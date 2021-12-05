@@ -1,13 +1,13 @@
 /// <reference path="Constants.js" />
 import { 
-    SQL_SCRIPT, SQL_SCRIPT_ID, JAM_ACCENT,
+    SQL_PATH, SQL_SCRIPT, SQL_SCRIPT_ID, JAM_ACCENT,
     STYLE_PATH, STYLE_ID, DB_PATH, JAM_INFO_ID, SMALL_ACCENT 
 } from './Constants.js';
 import { SetTitle, AddFooter, AddScript, AddStyle } from './Common.js';
-import { Result, GetJamFromPage } from './Data.js';
-const SQL_PATH = "https://kripken.github.io/sql.js/dist/";
+import { GetJamFromPage, GetUserID } from './Data.js';
 
 var db = null;
+const TEST_DB_PATH  = "/Data/JamsTest.db";
 
 AddScript(SQL_PATH + SQL_SCRIPT, SQL_SCRIPT_ID);
 
@@ -28,13 +28,8 @@ initSqlJs({ locateFile: filename => SQL_PATH + `${filename}` }).then(function (S
         }
         AddStyle(STYLE_PATH, STYLE_ID);
         window.setTimeout(function(){
-            if (db != null)
-            {
-                console.info("Loaded DB");
-                AddFooter();
-                GetJamPage();
-            }
-            else console.log("DB Null");
+            if (db != null) GetJamPage();
+            else console.error("DB Null");
         }, 200);
     };
         dbRequest.send();
@@ -61,8 +56,8 @@ function GetJamPage()
     container.innerHTML += 
         `<div class="jam-container">` +
         `<h1 class="jamheading">${row.Name}</h1>` + 
-        `<h3 class="subheading">${row.Theme}</h3>` + JAM_ACCENT +
-        `<h4 class="subheading">${row.Season} ${row.Year}, Organized by ${row.Organizer}</h4>` +  
+        `<h3 class="themeheading">${row.Theme}</h3>` + JAM_ACCENT +
+        `<h4 class="jamsubtitle">${row.Season} ${row.Year}, Organized by ${row.Organizer}</h4>` +  
         `</div>`;
     
     var mainDiv = document.createElement('div');
@@ -77,7 +72,8 @@ function GetJamPage()
         for (var i = 0; i < row.Judges.length; i++)
         {
             var jItem = ListItem(jList);
-            jItem.innerHTML = `<span>${row.Judges[i].Name}</span>`;
+            jItem.innerHTML = 
+                `<a href="${row.Judges[i].href}">${row.Judges[i].Name}</a>`;
         }
         judgeP.appendChild(jList);
     }
@@ -199,7 +195,17 @@ function GetJamPage()
                 //if (row.Entries[i].Team.includes("Team")) listItem.innerHTML += ` by ${row.Entries[i].Team}`;
                 //else listItem.innerHTML += ` by Team ${row.Entries[i].Team}`;
             }
-            else if (row.Entries[i].User != null) listItem.innerHTML += ` by ${row.Entries[i].User}`;
+            else if (row.Entries[i].User != null) 
+            {
+                var strUser = row.Entries[i].User;
+                var userID = GetUserID(strUser, db);
+                if (userID != null) 
+                {
+                    var userHref = "/Person.html?userid=" + userID;
+                    listItem.innerHTML += ` by <a href="${userHref}">${strUser}</a>`;
+                }
+                else listItem.innerHTML += ` by ${row.Entries[i].User}`;
+            }
             if (row.Entries[i].Score != null)
             {
                 listItem.innerHTML += `<br>Score: ${row.Entries[i].Score}`;
@@ -207,22 +213,7 @@ function GetJamPage()
         }
         entP.appendChild(entryList);
     }
-    var navLinks = "";
-    if (row.Previous != null || row.Next != null)
-    {
-        navLinks = `<p><h4 class="subheading" style="text-align: center;">`;
-        if (row.Previous != null)
-        {
-            navLinks += `<a href="${row.Previous}">&laquo; Previous Jam</a> `;
-            if (row.Next != null) navLinks += "| ";
-        }
-        if (row.Next != null)
-        {
-            navLinks += `<a href="${row.Next}">Next Jam &raquo;</a> `;
-        }
-        navLinks += "</h4></p>";
-    }
-    mainDiv.innerHTML += navLinks;
+    AddFooter(row.Previous, row.Next);
 }
 function ListItem(parentNode)
 {

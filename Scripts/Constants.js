@@ -4,7 +4,8 @@ const DIRECTORY_CLASS = "directory";
 const SUBDIRECTORY_CLASS = "subdirectory";
 const INCLUDES_DIRECTORY_ID = "jams-dogpit";
 const JAM_INFO_ID = "jam-info";
-const SMALL_ACCENT = `<div class="accent-small"></div>`;
+const SMALL_ACCENT_CLASS = "accent-small";
+const SMALL_ACCENT = `<div class="${SMALL_ACCENT_CLASS}"></div>`;
 const JAM_ACCENT = `<div class="accent" id="jam-accent"></div>`;
 
 const BASE = "/"
@@ -24,5 +25,6 @@ export {
     SQL_PATH, SQL_SCRIPT, SQL_SCRIPT_ID, BASE, SCRIPTS_PATH, 
     LIBRARY_PATH, STYLE_PATH, STYLE_ID, DB_PATH, DEFINITIONS_TABLE, 
     DIRECTORIES_TABLE, TITLE, DIRECTORY_CLASS, SUBDIRECTORY_CLASS,
-    INCLUDES_DIRECTORY_ID, JAM_INFO_ID, SMALL_ACCENT, JAM_ACCENT
+    INCLUDES_DIRECTORY_ID, JAM_INFO_ID, SMALL_ACCENT, JAM_ACCENT,
+    SMALL_ACCENT_CLASS
 };
