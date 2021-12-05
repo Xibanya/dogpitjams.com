@@ -1,32 +1,28 @@
-var DIRECTORY_CLASS = "directory";
-var SUBDIRECTORY_CLASS = "subdirectory";
-var INCLUDES_DIRECTORY_ID = "jams-dogpit";
-var JAM_INFO_ID = "jam-info";
-var PRETTYPRINT_CLASS = "prettyprint";
-var LINENUMS_CLASS = "linenums";
-var JAMS_TABLE = "Jams";
-var RESULTS_TABLE = "Results";
-var GAMES_TABLE = "Games"
-var DEFINITIONS_TABLE = "Definitions";
-var DIRECTORIES_TABLE = "Directories";
-var SMALL_ACCENT = `<div class="accent-small"></div>`;
-var JAM_NAME = 1;
-var JAM_ORGANIZER = 3;
-var JAM_THEME = 4;
-var JAM_URL = 5;
-var JAM_PAGE = 6;
-var GAME_TITLE = 1;
-var GAME_USER = 2;
-var GAME_URL = 3;
-var GAME_TEAM = 4;
-var GAME_SCORE = 7;
-var TITLE = "The Dogpitjamcronomicon"
-var BASE = "/"
-var SCRIPTS_PATH = BASE + "Scripts/";
-var STYLE_PATH = BASE + "Styles/Style.css";
-var STYLE_ID = "MainStyle";
-var LIBRARY_PATH = BASE + "Library/";
-var SQL_SCRIPT_ID = "SQLScript";
-var SQL_SCRIPT = "sql-wasm.js";
-var SQL_PATH = "https://kripken.github.io/sql.js/dist/";
-var DB_PATH = "https://dogpitjams.com/Data/Jams.db";
+const TITLE = "The Dogpitjamcronomicon"
+
+const DIRECTORY_CLASS = "directory";
+const SUBDIRECTORY_CLASS = "subdirectory";
+const INCLUDES_DIRECTORY_ID = "jams-dogpit";
+const JAM_INFO_ID = "jam-info";
+const SMALL_ACCENT = `<div class="accent-small"></div>`;
+const JAM_ACCENT = `<div class="accent" id="jam-accent"></div>`;
+
+const BASE = "/"
+const SCRIPTS_PATH = BASE + "Scripts/";
+const LIBRARY_PATH = BASE + "Library/";
+const STYLE_PATH = BASE + "Styles/Style.css";
+const STYLE_ID = "MainStyle";
+const SQL_SCRIPT_ID = "SQLScript";
+const SQL_PATH = "https://kripken.github.io/sql.js/dist/";
+const SQL_SCRIPT = "sql-wasm.js";
+const DB_PATH = BASE + "Data/Jams.db";
+
+const DEFINITIONS_TABLE = "Definitions";
+const DIRECTORIES_TABLE = "Directories";
+
+export { 
+    SQL_PATH, SQL_SCRIPT, SQL_SCRIPT_ID, BASE, SCRIPTS_PATH, 
+    LIBRARY_PATH, STYLE_PATH, STYLE_ID, DB_PATH, DEFINITIONS_TABLE, 
+    DIRECTORIES_TABLE, TITLE, DIRECTORY_CLASS, SUBDIRECTORY_CLASS,
+    INCLUDES_DIRECTORY_ID, JAM_INFO_ID, SMALL_ACCENT, JAM_ACCENT
+};

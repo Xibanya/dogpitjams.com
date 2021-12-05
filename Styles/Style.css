@@ -126,7 +126,10 @@ div.directory p {
 {
     margin-left:2em;
 }
-
+div.winner-list
+{
+    margin-left:2em;
+}
 .directory, .subdirectory, code.prettyprint,
 pre.prettyprint
 { 

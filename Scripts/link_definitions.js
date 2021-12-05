@@ -1,8 +1,44 @@
+var DIRECTORY_CLASS = "directory";
+var SUBDIRECTORY_CLASS = "subdirectory";
+var INCLUDES_DIRECTORY_ID = "jams-dogpit";
+var JAM_INFO_ID = "jam-info";
+var PRETTYPRINT_CLASS = "prettyprint";
+var LINENUMS_CLASS = "linenums";
+var JAMS_TABLE = "Jams";
+var RESULTS_TABLE = "Results";
+var GAMES_TABLE = "Games"
+var DEFINITIONS_TABLE = "Definitions";
+var DIRECTORIES_TABLE = "Directories";
+var SMALL_ACCENT = `<div class="accent-small"></div>`;
+var JAM_NAME = 1;
+var JAM_ORGANIZER = 3;
+var JAM_THEME = 4;
+var JAM_URL = 5;
+var JAM_PAGE = 6;
+var TITLE = "The Dogpitjamcronomicon"
+var isSource = false;
+var sourceName = null;
+var BASE = "/"
 
-/// <reference path="Constants.js" />
-import 'Footer.js';
+var SCRIPTS_PATH = BASE + "Scripts/";
 
+var STYLE_PATH = BASE + "Styles/Style.css";
+var STYLE_ID = "MainStyle";
+
+var LIBRARY_PATH = BASE + "Library/";
+
+var SQL_SCRIPT_ID = "SQLScript";
+var SQL_SCRIPT = "sql-wasm.js";
+var SQL_PATH = "https://kripken.github.io/sql.js/dist/";
+var DB_PATH = "https://dogpitjams.com/Data/Jams.db";
+var YOUTUBE = `https://www.youtube.com/channel/UCGu0wtYct94lFuAKN_SrFAg/playlists?view=50&sort=dd&shelf_id=3`;
 var db = null;
+
+var URL_INDEX = `<a href="${BASE}"><i class="fa fa-home"></i></a>`;
+var URL_REPO = `<a href="${YOUTUBE}" target="new"><i class="fa fa-youtube"></i></a>`;
+var URL_DISCORD = `<a href="https://discord.gg/YvXrB62" target="new"><i class="fab fa-discord"></i></a>`;
+var URL_T = `<a href="https://twitter.com/TeamDogpit" target="new"><i class="fa fa-twitter"></i></a>`;
+var EXTERNAL_LINKS = `${URL_REPO} ${URL_T} ${URL_DISCORD}`;
 
 AddScript(SQL_PATH + SQL_SCRIPT, SQL_SCRIPT_ID);
 
@@ -183,13 +219,13 @@ class Game {
     constructor(row)
     {
         this.ID = row[0];
-        this.Name = row[GAME_TITLE];
-        this.User = row[GAME_USER];
-        this.Link = row[GAME_URL];
-        this.Team = row[GAME_TEAM];
+        this.Name = row[1];
+        this.User = row[2];
+        this.Link = row[3];
+        this.Team = row[4];
         this.Members = row[5];
         this.Jam = row[6];
-        this.Score = row[7] != null? parseFloat(row[7]) : -1;
+        this.Score = row[7];
     }
 }
 class Result {
@@ -199,7 +235,7 @@ class Result {
         this.Jam = row[1];
         this.Name = row[2];
         this.Winner = row[3];
-        this.Points = row[4] != null? parseFloat(row[4]) : -1;
+        this.Points = parseFloat(row[4]);
         this.Game = null;
         if (this.Winner != null)
         {
@@ -548,7 +584,53 @@ function LinkIncludes()
     }
 } 
 
+function AddFooter()
+{
+    var body = document.getElementsByTagName('body')[0];
+    var footer = document.getElementById('footer');
+    if (footer == null)
+    {
+        var space = document.getElementById('footer-spacer');
+        if (space == null)
+        {
+            space = document.createElement('div');
+            body.appendChild(space);
+            space.classList = "space";
+            space.id = "footer-spacer";
+        }
+        footer = document.createElement('footer');
+        body.appendChild(footer);
+        footer.id = 'footer';
+    }
+    var sourceText = document.getElementById('footer-source');
+    if (sourceText == null)
+    {
+        sourceText = document.createElement('span');
+        sourceText.id = "footer-source";
+        footer.appendChild(sourceText);
+    }
+    sourceText.classList = isSource? "source" : "hidden";
 
+    var footerText = document.getElementById('footer-center');
+    if (footerText == null)
+    {
+        footerText = document.createElement('span');
+        footerText.id = "footer-center";
+        footerText.classList = "center";
+        footer.appendChild(footerText);
+    }
+    footerText.innerHTML = URL_INDEX;
+    
+    var linkText = document.getElementById('footer-links');
+    if (linkText == null)
+    {
+        linkText = document.createElement('span');
+        linkText.id = "footer-links";
+        footer.appendChild(linkText);
+        linkText.innerHTML = EXTERNAL_LINKS;
+    }
+    linkText.classList = isSource? "links" : "";
+}
 
 //adapted from https://j11y.io/snippets/find-and-replace-text-with-javascript/
 function findAndReplace(searchText, replacement, searchNode) 
