@@ -402,7 +402,7 @@ input[type=text], select, textarea {
   input[type=submit]:hover {
     background-color: var(--directive);
   }
-.game-item {
+a.game-item {
     font-size: 130%;
 }
 .profile-result {

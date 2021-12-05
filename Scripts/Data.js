@@ -24,6 +24,12 @@ function Tableify(strigified)
     }
     return array;
 }
+function Query(sql, db)
+{
+    var result = JSON.parse(JSON.stringify(db.exec(sql)));
+    if (result != null && result.length > 0) return Tableify(result);
+    else return null;
+}
 
 class Group {
     constructor(row, db)
@@ -76,6 +82,7 @@ class Game {
         this.Members = row[5];
         this.Jam = row[6];
         this.Score = row[GAME_SCORE];
+        this.TeamID = row[8];
     }
 }
 function GetJamLink(id, db)
@@ -89,8 +96,10 @@ class Role {
     {
         this.Name = name;
         this.Role = role;
+        this.GameID = gameID;
         var gameQuery = `SELECT * FROM ${GAMES_TABLE} WHERE ID = ${gameID}`;
-        var gameTable = Tableify(JSON.parse(JSON.stringify(db.exec(gameQuery))));
+        var gameResults = JSON.parse(JSON.stringify(db.exec(gameQuery)));
+        var gameTable = Tableify(gameResults);
         this.Game = new Game(gameTable[0]);
         this.Jam = GetJamLink(this.Game.Jam, db);
     }
@@ -121,22 +130,37 @@ class Profile {
                 }
             }
         }
-
         this.Games = [];
-        var jammerQuery = `SELECT GameID, Name, Role FROM Jammer WHERE UserID = ${this.ID}`;
+        var jammerQuery = `SELECT GameID, Name, Role FROM Jammer WHERE UserID = '${this.ID}'`;
         var jammerResults = JSON.parse(JSON.stringify(db.exec(jammerQuery)));
-        if (jammerResults == null)
+        if (jammerResults != null && jammerResults.length > 0)
         {
-            console.warn("Couldn't find any games made by this user.");
-            return;
+            var jammerTable = Tableify(jammerResults);
+            for (var i = 0; i < jammerTable.length; i++)
+            {
+                var row = jammerTable[i];
+                if (row[0] < 1) continue;
+                var sameID = this.Games.filter(function(item){return (item.GameID == row[0]);});
+                if (sameID == null || sameID.length == 0)
+                {
+                    var creditedAs = row[1] != null? row[1] : this.Name;
+                    this.Games.push(new Role(creditedAs, row[2], row[0], db));
+                }
+            }
         }
-        var jammerTable = Tableify(jammerResults);
-        for (var i = 0; i < jammerTable.length; i++)
+        var nQ = `SELECT ID FROM Games WHERE User = '${this.Name}'`;
+        var gTable = Query(nQ, db);
+        if (gTable != null && gTable.length > 0)
         {
-            var row = jammerTable[i];
-            if (row[1] < 1) continue;
-            var creditedAs = row[1] != null? row[1] : this.Name;
-            this.Games.push(new Role(creditedAs, row[2], row[0], db));
+            for (var q = 0; q < gTable.length; q++)
+            {
+                var gRow = gTable[q][0];
+                var sameID = this.Games.filter(function(item){return (item.GameID == gRow);});
+                if (sameID == null || sameID.length == 0)
+                {
+                    this.Games.push(new Role(this.Name, null, gRow, db));
+                }
+            }
         }
     }
 }
@@ -155,8 +179,7 @@ class Result {
         if (this.Winner != null)
         {
             var winQuery =  `SELECT * FROM ${GAMES_TABLE} WHERE ID IS '${this.Winner}'`;
-            var gameTable = Tableify(JSON.parse(JSON.stringify(db.exec(winQuery))));
-        
+            var gameTable = Query(winQuery, db);
             if (gameTable != null && gameTable.length > 0)
             {
                 this.Game = new Game(gameTable[0]);
@@ -214,15 +237,12 @@ class Jam {
             if (prevInt > 0)
             {
                 var prevQuery = `SELECT * FROM ${JAMS_TABLE} WHERE ID IS ${prevInt}`;
-                var prevResults = db.exec(prevQuery);
-                if (prevResults != null)
+                var prevResults = Query(prevQuery, db);
+                if (prevResults != null && prevResults.length > 0 && 
+                    prevResults[0] != null && prevResults[0] != "null")
                 {
-                    var prevArr = JSON.parse(JSON.stringify(prevResults));
-                    if (prevArr != null && prevArr.length > 0) 
-                    {
-                        var prevRow = Tableify(prevArr)[0];
-                        this.Previous = LIBRARY_PATH + prevRow[JAM_URL] + prevRow[JAM_PAGE] + ".html";
-                    }
+                    var prevRow = prevResults[0];
+                    this.Previous = LIBRARY_PATH + prevRow[JAM_URL] + prevRow[JAM_PAGE] + ".html";
                 }
             }
             var cats = `SELECT * FROM ${RESULTS_TABLE} WHERE Jam IS '${this.ID}'`;
@@ -259,13 +279,13 @@ class Jam {
                 }
             }
             var juds =  `SELECT UID, Name FROM ${GUEST_TABLE} WHERE Jam IS '${this.ID}' AND Judge = 1`;
-            var judResults = db.exec(juds);
-            if (judResults != null)
+            var judResults = Query(juds, db);
+            if (judResults != null && judResults.length > 0)
             {
-                var judArr = Tableify(JSON.parse(JSON.stringify(judResults)));
-                for (var judge of judArr) 
+                for (var q = 0; q < judResults.length; q++)
                 {
-                    this.Judges.push(new PersonLink(judge[0], judge[1]));
+                    var jRow = judResults[q];
+                    this.Judges.push(new PersonLink(jRow[0], jRow[1]));
                 }
             }
         }
@@ -301,6 +321,21 @@ function GetParam(parameter, defaultvalue)
     }
     return urlparameter;
 }
+function GetUserLink(id, creditedAs = null)
+{
+    var name = creditedAs;
+    if (name == null)
+    {
+        var sql = `SELECT Name FROM User WHERE ID = ${id}`;
+        var usrResults = JSON.parse(JSON.stringify(db.exec(sql)));
+        if (usrResults != null && usrResults.length > 0)
+        {
+            var usrTable = Tableify(usrResults);
+            name = usrTable[0][0];
+        }
+    }
+    return new PersonLink(id, name);
+}
 function GetProfile(db)
 {
     var profile = null;
@@ -309,7 +344,7 @@ function GetProfile(db)
     {
         var sql = `SELECT * FROM User WHERE ID = ${userID}`;
         var usrResults = JSON.parse(JSON.stringify(db.exec(sql)));
-        if (usrResults != null)
+        if (usrResults != null && usrResults.length > 0)
         {
             var usrTable = Tableify(usrResults);
             if (usrTable.length > 0) profile = new Profile(usrTable[0], db);
@@ -319,9 +354,9 @@ function GetProfile(db)
 }
 function GetUserID(name, db)
 {
-    var sql = `SELECT ID FROM User WHERE Name = ${name} OR Itch = ${name}`;
+    var sql = `SELECT ID FROM User WHERE Name = '${name}' OR Itch = '${name}'`;
     var usrResults = JSON.parse(JSON.stringify(db.exec(sql)));
-    if (usrResults != null)
+    if (usrResults != null && usrResults.length > 0)
     {
         var usrTable = Tableify(usrResults);
         if (usrTable.length > 0)
@@ -332,5 +367,67 @@ function GetUserID(name, db)
     }
     return null;
 }
+function GetTeam(db)
+{
+    var profile = null;
+    var userID = GetParam("teamid", 0);
+    if (userID > 0)
+    {
+        var sql = `SELECT * FROM Games WHERE TeamID = ${userID}`;
+        var usrResults = JSON.parse(JSON.stringify(db.exec(sql)));
+        if (usrResults != null && usrResults.length > 0)
+        {
+            var usrTable = Tableify(usrResults);
+            if (usrTable.length > 0) profile = new TeamProfile(userID, usrTable, db);
+        }
+    }
+    return profile;
+}
+class GameTeam {
+    constructor(game, db)
+    {
+        this.Game = game;
+        this.Jam = GetJamLink(this.Game.Jam, db);
+        this.Links = [];
+        var jammerQ = 
+            `SELECT Jammer.UserID, Jammer.Name as Credited, ` + 
+            `User.Name FROM Jammer INNER JOIN User ON Jammer.UserID = User.ID ` + 
+            `WHERE Jammer.GameID = ${this.Game.ID}`;
+        var jTable = Query(jammerQ, db);
+        if (jTable != null)
+        {
+            for (var i = 0; i < jTable.length; i++)
+            {
+                var row = jTable[i];
+                var sameID = this.Links.filter(function(item){return (item.ID == row[0]);});
+                if (sameID == null || sameID.length == 0)
+                {
+                    var cName = row[1] != null? row[1] : row[2];
+                    this.Links.push(new PersonLink(row[0], cName));
+                }
+            }
+        }
+    }
+}
+class TeamProfile
+{
+    constructor(id, gameTable, db)
+    {
+        this.ID = id;
+        this.Name = null;
+        var nTable = Query(`SELECT Name FROM Teams WHERE ID = ${id}`, db);
+        if (nTable != null)
+        {
+            this.Name = nTable[0][0];
+        }
+        this.Games = [];
+        for (var i = 0; i < gameTable.length; i++)
+        {
+            var row = gameTable[i];
+            var game = new Game(row);
+            this.Games.push(new GameTeam(game, db));
+        } 
+    }
+}
 
-export { Group, Result, Jam, Tableify, GetJamFromPage, GetProfile, GetUserID };
+export { Group, Result, Jam, Tableify, GetJamFromPage, GetProfile, GetUserID, GetTeam };

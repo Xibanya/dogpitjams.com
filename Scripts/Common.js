@@ -60,7 +60,7 @@ function AddFooter(previous = null, next = null)
         body.appendChild(footer);
         footer.id = 'footer';
     }
-    if (previous != null)
+    if (previous != null && !previous.includes("null"))
     {
         var sourceText = document.createElement('span');
         sourceText.id = "footer-previous";
@@ -88,4 +88,4 @@ function AddFooter(previous = null, next = null)
         nextText.innerHTML = `<a href="${next}">Next Jam &raquo;</a> `;
     }
 }
-export { SetTitle, AddFooter, AddScript, AddStyle, GetParam };
+export { SetTitle, AddFooter, AddScript, AddStyle };

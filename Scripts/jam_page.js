@@ -167,8 +167,23 @@ function GetJamPage()
                             gameDiv.innerHTML += ` tied with <span>${tied}</span>`;
                         }
                     }
-                    if (result.Game.Team != null) gameDiv.innerHTML += ` by ${result.Game.Team}`;
-                    else if (result.Game.User != null) gameDiv.innerHTML += ` by ${result.Game.User}`;  
+                    if (result.Game.Team != null) 
+                    {
+                        var teamName = result.Game.Team;
+                        var teamhref = `/Team.html?teamid=${result.Game.TeamID}`;
+                        gameDiv.innerHTML += ` by <a href="${teamhref}">${teamName}</a>`;
+                    }
+                    else if (result.Game.User != null) 
+                    {
+                        var strUser = result.Game.User;
+                        var userID = GetUserID(strUser, db);
+                        if (userID != null) 
+                        {
+                            var userHref = "/Person.html?userid=" + userID;
+                            gameDiv.innerHTML += ` by <a href="${userHref}">${strUser}</a>`;
+                        }
+                        else gameDiv.innerHTML += ` by ${strUser}`;
+                    }
                 }
             }
         }
@@ -191,9 +206,9 @@ function GetJamPage()
             else listItem.innerHTML = `<span>${row.Entries[i].Name}</span>`;
             if (row.Entries[i].Team != null)
             {
-                listItem.innerHTML += ` by ${row.Entries[i].Team}`;
-                //if (row.Entries[i].Team.includes("Team")) listItem.innerHTML += ` by ${row.Entries[i].Team}`;
-                //else listItem.innerHTML += ` by Team ${row.Entries[i].Team}`;
+                var teamName = row.Entries[i].Team;
+                var teamhref = `/Team.html?teamid=${row.Entries[i].TeamID}`;
+                listItem.innerHTML += ` by <a href="${teamhref}">${teamName}</a>`;
             }
             else if (row.Entries[i].User != null) 
             {

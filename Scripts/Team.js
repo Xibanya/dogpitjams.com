@@ -4,7 +4,7 @@ import {
     STYLE_PATH, STYLE_ID, DB_PATH 
 } from './Constants.js';
 import { SetTitle, AddFooter, AddScript, AddStyle } from './Common.js';
-import { GetProfile } from './Data.js';
+import { GetTeam } from './Data.js';
 
 var db = null;
 
@@ -31,7 +31,7 @@ initSqlJs({ locateFile: filename => SQL_PATH + `${filename}` }).then(function (S
             {
                 console.info("Loaded DB");
                 AddFooter();
-                GetPerson();
+                DrawTeam();
             }
             else console.log("DB Null");
         }, 200);
@@ -40,13 +40,13 @@ initSqlJs({ locateFile: filename => SQL_PATH + `${filename}` }).then(function (S
     });
 }, 200);
 
-function GetPerson()
+function DrawTeam()
 {
-    var profile = GetProfile(db);
+    var profile = GetTeam(db);
     
     if (profile == null) 
     {
-        console.error(`Couldn't find user!`);
+        console.error(`Couldn't find team!`);
         return;
     }
     SetTitle(profile.Name)
@@ -55,34 +55,6 @@ function GetPerson()
         `<div class="jam-container">` +
         `<h1 class="jamheading">${profile.Name}</h1>` +
         JAM_ACCENT + `</div>`;
-
-    if (profile.Judged.length > 0)
-    {
-        var guestDiv = document.createElement('div');
-        guestDiv.className = "directory";
-        container.appendChild(guestDiv);
-        var judgeP = document.createElement('p');
-        guestDiv.appendChild(judgeP);
-
-        var judgeHeader = document.createElement('h1');
-        judgeHeader.className = "profile-header";
-        judgeHeader.innerText = "Judge";
-        judgeP.appendChild(judgeHeader);
-        var judgeAccent = document.createElement('div');
-        judgeAccent.className = "accent-small";
-        judgeP.appendChild(judgeAccent);
-        
-        var jList = document.createElement('ul');
-        for (var i = 0; i < profile.Judged.length; i++)
-        {
-            var jItem = ListItem(jList);
-            var jamLink = document.createElement('a');
-            jamLink.href = profile.Judged[i].href;
-            jamLink.innerText = profile.Judged[i].Name;
-            jItem.appendChild(jamLink);
-        }
-        judgeP.appendChild(jList);
-    }
 
     if (profile.Games.length > 0)
     {
@@ -125,19 +97,26 @@ function GetPerson()
                 gameSpan.className = "game-item";
                 resultItem.appendChild(gameSpan);
             }
-            if (game.Game.Team != null) resultItem.innerHTML += ` by ${game.Game.Team} `;
-            else resultItem.innerHTML += ` by ${game.Game.User} `;
 
-            if (game.Role != null)
+            if (game.Links.length > 0)
             {
-                resultItem.innerHTML += `<br>${game.Role} `;
-            }
-            if (game.Name != null && game.Name != profile.Name)
-            {
-                resultItem.innerHTML += `<i>(credited as ${game.Name})</i>`;
+                var pList = document.createElement('ul');
+                pList.className = "person-list";
+                resultItem.appendChild(pList);
+
+                for (var j = 0; j < game.Links.length; j++)
+                {
+                    var person = game.Links[j];
+                    var pLi = document.createElement('li');
+                    var pLink = document.createElement('a');
+                    pLink.href = person.href;
+                    pLink.innerText = person.Name;
+                    pLi.appendChild(pLink);
+                    pList.appendChild(pLi);
+                }
             }
             resultItem.innerHTML += 
-                `<br> for <a href="${game.Jam.href}">${game.Jam.Name}</a>`;
+                ` for <a href="${game.Jam.href}">${game.Jam.Name}</a>`;
             resultList.appendChild(resultItem);
         }
     }
