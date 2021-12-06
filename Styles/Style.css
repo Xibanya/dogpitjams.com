@@ -408,3 +408,9 @@ a.game-item {
 .profile-result {
     margin-bottom: 0.5em;
 }
+
+p.result-line {
+    margin-top: 0.15em;
+    margin-bottom: 0.15em;
+    margin-left: 0px;
+}

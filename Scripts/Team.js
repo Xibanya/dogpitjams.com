@@ -93,6 +93,7 @@ function DrawTeam()
             else 
             {
                 var gameSpan = document.createElement('span');
+                gameSpan.id = 'game-' + game.GameID;
                 gameSpan.innerText = game.Game.Name;
                 gameSpan.className = "game-item";
                 resultItem.appendChild(gameSpan);
@@ -109,6 +110,7 @@ function DrawTeam()
                     var person = game.Links[j];
                     var pLi = document.createElement('li');
                     var pLink = document.createElement('a');
+                    pLi.id = "userid-" + person.ID;
                     pLink.href = person.href;
                     pLink.innerText = person.Name;
                     pLi.appendChild(pLink);

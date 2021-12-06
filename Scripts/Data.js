@@ -307,7 +307,8 @@ function GetJamFromPage(db)
 function URLVars() 
 {
     var vars = {};
-    var parts = window.location.href.replace(/[?&]+([^=&]+)=([^&]*)/gi, function(m,key,value) {
+    var parts = window.location.href.replace(/[?&]+([^=&]+)=([^&]*)/gi, 
+    function(m,key,value) {
         vars[key] = value;
     });
     return vars;
@@ -321,6 +322,8 @@ function GetParam(parameter, defaultvalue)
     }
     return urlparameter;
 }
+
+// when you know the ID but not necessarily the name
 function GetUserLink(id, creditedAs = null)
 {
     var name = creditedAs;
@@ -336,6 +339,7 @@ function GetUserLink(id, creditedAs = null)
     }
     return new PersonLink(id, name);
 }
+
 function GetProfile(db)
 {
     var profile = null;
@@ -387,6 +391,7 @@ class GameTeam {
     constructor(game, db)
     {
         this.Game = game;
+        this.GameID = game.ID;
         this.Jam = GetJamLink(this.Game.Jam, db);
         this.Links = [];
         var jammerQ = 
@@ -399,11 +404,25 @@ class GameTeam {
             for (var i = 0; i < jTable.length; i++)
             {
                 var row = jTable[i];
-                var sameID = this.Links.filter(function(item){return (item.ID == row[0]);});
+                var sameID = this.Links.filter(
+                    function(item){return (item.ID == row[0]);});
                 if (sameID == null || sameID.length == 0)
                 {
                     var cName = row[1] != null? row[1] : row[2];
                     this.Links.push(new PersonLink(row[0], cName));
+                }
+            }
+        }
+        if (this.Game.User != null && this.Game.User != this.Game.Team)
+        {
+            var submitter = GetUserID(this.Game.User, db);
+            if (submitter != null)
+            {
+                var sameID = this.Links.filter(
+                    function(item){return (item.ID == submitter);});
+                if (sameID == null || sameID.length == 0)
+                {
+                    this.Links.push(new PersonLink(submitter, this.Game.User));
                 }
             }
         }

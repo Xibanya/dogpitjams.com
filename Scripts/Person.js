@@ -4,7 +4,7 @@ import {
     STYLE_PATH, STYLE_ID, DB_PATH 
 } from './Constants.js';
 import { SetTitle, AddFooter, AddScript, AddStyle } from './Common.js';
-import { GetProfile } from './Data.js';
+import { GetProfile, GetUserID } from './Data.js';
 
 var db = null;
 
@@ -116,6 +116,7 @@ function GetPerson()
                 gameLink.target = "new";
                 gameLink.innerText = game.Game.Name;
                 gameLink.className = "game-item";
+                gameLink.id = "game-" + game.GameID;
                 resultItem.appendChild(gameLink);
             }
             else 
@@ -123,21 +124,51 @@ function GetPerson()
                 var gameSpan = document.createElement('span');
                 gameSpan.innerText = game.Game.Name;
                 gameSpan.className = "game-item";
+                gameSpan.id = "game-" + game.GameID;
                 resultItem.appendChild(gameSpan);
             }
-            if (game.Game.Team != null) resultItem.innerHTML += ` by ${game.Game.Team} `;
-            else resultItem.innerHTML += ` by ${game.Game.User} `;
+            if (game.Game.Team != null) 
+            {
+                if (game.Game.Team != profile.Name && 
+                    game.Game.TeamID != null && game.Game.TeamID > 0)
+                {
+                    var thref = `/Team.html?teamid=${game.Game.TeamID}`;
+                    resultItem.innerHTML += 
+                    ` by <a href="${thref}">${game.Game.Team}</a> `;
+                }
+                else resultItem.innerHTML += ` by ${game.Game.Team} `;
+            }
+            else if (game.Game.User != null)
+            {
+                var submitter = GetUserID(game.Game.User, db);
+                if (submitter != profile.ID)
+                {
+                    var shref = `/Person.html?userid=${submitter}`;
+                    resultItem.innerHTML += 
+                        ` by <a href="${shref}">${game.Game.User}</a> `;
+                }
+                else resultItem.innerHTML += ` by ${game.Game.User} `;
+            }
 
             if (game.Role != null)
             {
-                resultItem.innerHTML += `<br>${game.Role} `;
+                var pRole = document.createElement('p');
+                pRole.className = "result-line";
+                pRole.innerText = game.Role;
+                resultItem.appendChild(pRole);
             }
             if (game.Name != null && game.Name != profile.Name)
             {
-                resultItem.innerHTML += `<i>(credited as ${game.Name})</i>`;
+                var pCredit = document.createElement('p');
+                pCredit.className = "result-line";
+                pCredit.innerHTML = `<i>(credited as ${game.Name})</i>`;
+                resultItem.appendChild(pCredit);
             }
-            resultItem.innerHTML += 
-                `<br> for <a href="${game.Jam.href}">${game.Jam.Name}</a>`;
+            var pJam = document.createElement('p');
+            pJam.className = "result-line";
+            pJam.innerHTML =  `for <a href="${game.Jam.href}">${game.Jam.Name}</a>`;
+            resultItem.appendChild(pJam);
+               
             resultList.appendChild(resultItem);
         }
     }
