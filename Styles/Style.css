@@ -44,12 +44,11 @@ div.accent, div.accent-small
 margin-top: -5px;
  background-color: transparent !important;
  background-repeat: no-repeat;
-
  margin-bottom: 4px; 
  background-image: linear-gradient(to right, #fc28a8, #03edf9);
 }
 div.accent {
-    margin-left: 15px;
+    margin-left: 20px;
     max-width: 300px;
     height: 3px;
 }
@@ -76,6 +75,7 @@ h3.themeheading {
 .jamsubtitle {
     font-style: italic;
     margin-top: 6px;
+    margin-left: 5px;
     font-weight: lighter;
     color: var(--header);
 }
@@ -413,4 +413,8 @@ p.result-line {
     margin-top: 0.15em;
     margin-bottom: 0.15em;
     margin-left: 0px;
+}
+
+span.submitter {
+    margin-left: 0.5em;
 }

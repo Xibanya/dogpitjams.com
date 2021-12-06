@@ -83,6 +83,7 @@ class Game {
         this.Jam = row[6];
         this.Score = row[GAME_SCORE];
         this.TeamID = row[8];
+        this.UserID = row[9];
     }
 }
 function GetJamLink(id, db)
@@ -394,6 +395,14 @@ class GameTeam {
         this.GameID = game.ID;
         this.Jam = GetJamLink(this.Game.Jam, db);
         this.Links = [];
+        this.Submitter = null;
+        if (game.User != null && game.User != game.Team && 
+            game.UserID != null && 
+            parseInt(game.UserID) > 0)
+        {
+            this.Submitter = new PersonLink(game.UserID, game.User);
+            this.Links.push(this.Submitter);
+        }
         var jammerQ = 
             `SELECT Jammer.UserID, Jammer.Name as Credited, ` + 
             `User.Name FROM Jammer INNER JOIN User ON Jammer.UserID = User.ID ` + 
@@ -404,6 +413,7 @@ class GameTeam {
             for (var i = 0; i < jTable.length; i++)
             {
                 var row = jTable[i];
+                if (this.Submitter != null && row[0] == this.Submitter.ID) continue;
                 var sameID = this.Links.filter(
                     function(item){return (item.ID == row[0]);});
                 if (sameID == null || sameID.length == 0)
