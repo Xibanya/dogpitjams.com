@@ -64,11 +64,12 @@ class JamLink {
     }
 }
 class PersonLink {
-    constructor(id, name)
+    constructor(id, name, role)
     {
         this.ID = id;
         this.Name = name;
         this.href = id != null? `/Person.html?userid=${id}` : null;
+        this.role = role;
     }
 }
 class Game {
@@ -286,7 +287,7 @@ class Jam {
                 for (var q = 0; q < judResults.length; q++)
                 {
                     var jRow = judResults[q];
-                    this.Judges.push(new PersonLink(jRow[0], jRow[1]));
+                    this.Judges.push(new PersonLink(jRow[0], jRow[1], null));
                 }
             }
         }
@@ -338,7 +339,7 @@ function GetUserLink(id, creditedAs = null)
             name = usrTable[0][0];
         }
     }
-    return new PersonLink(id, name);
+    return new PersonLink(id, name, null);
 }
 
 function GetProfile(db)
@@ -372,6 +373,21 @@ function GetUserID(name, db)
     }
     return null;
 }
+function GetNameFromID(id, db)
+{
+    var sql = `SELECT Name FROM User WHERE ID = ${id}`;
+    var usrResults = JSON.parse(JSON.stringify(db.exec(sql)));
+    if (usrResults != null && usrResults.length > 0)
+    {
+        var usrTable = Tableify(usrResults);
+        if (usrTable.length > 0)
+        {
+            console.info(`${usrTable.length} matches for ${id}`);
+            return usrTable[0][0];
+        }
+    }
+    return null;
+}
 function GetTeam(db)
 {
     var profile = null;
@@ -396,16 +412,10 @@ class GameTeam {
         this.Jam = GetJamLink(this.Game.Jam, db);
         this.Links = [];
         this.Submitter = null;
-        if (game.User != null && //game.User != game.Team && 
-            game.UserID != null && 
-            parseInt(game.UserID) > 0)
-        {
-            this.Submitter = new PersonLink(game.UserID, game.User);
-            this.Links.push(this.Submitter);
-        }
         var jammerQ = 
             `SELECT Jammer.UserID, Jammer.Name as Credited, ` + 
-            `User.Name FROM Jammer INNER JOIN User ON Jammer.UserID = User.ID ` + 
+            `User.Name, Jammer.Role as Role ` +
+            `FROM Jammer LEFT JOIN User ON Jammer.UserID = User.ID ` + 
             `WHERE Jammer.GameID = ${this.Game.ID}`;
         var jTable = Query(jammerQ, db);
         if (jTable != null)
@@ -413,41 +423,33 @@ class GameTeam {
             for (var i = 0; i < jTable.length; i++)
             {
                 var row = jTable[i];
-                if (this.Submitter != null && row[0] == this.Submitter.ID) continue;
                 var sameID = this.Links.filter(
                     function(item){return (item.ID == row[0]);});
                 if (sameID == null || sameID.length == 0)
                 {
                     var cName = row[1] != null? row[1] : row[2];
-                    this.Links.push(new PersonLink(row[0], cName));
+                    var personLink = new PersonLink(row[0], cName, row[3]);
+                    if (row[0] == this.Game.UserID || cName == this.Game.User) 
+                    {
+                        this.Submitter = personLink;
+                    }
+                    this.Links.push(personLink);
                 }
             }
         }
-        var noLinkQ = 
-        `SELECT Jammer.Name ` + + 
-        `WHERE Jammer.GameID = ${this.Game.ID} AND Jammer.UserID IS NULL`;
-            var noLinkTable = Query(noLinkQ, db);
-            if (noLinkTable != null)
-            {
-                for (var i = 0; i < noLinkTable.length; i++)
-                {
-                    var row = jTable[i];
-                    this.Links.push(new PersonLink(null, row[0]));
-                }
-            }
-
-        if (this.Game.User != null && this.Game.User != this.Game.Team)
+        
+        // if the user who submitted the entry hasn't yet been
+        // added to the list of team members, add them now
+        if (this.Submitter == null)
         {
-            var submitter = GetUserID(this.Game.User, db);
-            if (submitter != null)
+            var submitterID = game.UserID;
+            var submitterName = this.Game.User;
+            if (submitterID == null || parseInt(submitterID) == 0) 
             {
-                var sameID = this.Links.filter(
-                    function(item){return (item.ID == submitter);});
-                if (sameID == null || sameID.length == 0)
-                {
-                    this.Links.push(new PersonLink(submitter, this.Game.User));
-                }
+                submitterID = GetUserID(this.Game.User, db);
             }
+            this.Submitter = new PersonLink(submitterID, submitterName, null);
+            this.Links.push(this.Submitter);
         }
     }
 }

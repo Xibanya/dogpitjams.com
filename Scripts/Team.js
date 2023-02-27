@@ -129,6 +129,10 @@ function DrawTeam()
                         }
                         pLi.appendChild(pLink);
                     }
+                    if (person.role != null) 
+                    {
+                        pLi.innerHTML += ` ${person.role}`;
+                    }
                     pList.appendChild(pLi);
                 }
             }
