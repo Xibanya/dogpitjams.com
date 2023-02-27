@@ -68,7 +68,7 @@ class PersonLink {
     {
         this.ID = id;
         this.Name = name;
-        this.href = `/Person.html?userid=${id}`;
+        this.href = id != null? `/Person.html?userid=${id}` : null;
     }
 }
 class Game {
@@ -396,7 +396,7 @@ class GameTeam {
         this.Jam = GetJamLink(this.Game.Jam, db);
         this.Links = [];
         this.Submitter = null;
-        if (game.User != null && game.User != game.Team && 
+        if (game.User != null && //game.User != game.Team && 
             game.UserID != null && 
             parseInt(game.UserID) > 0)
         {
@@ -423,6 +423,19 @@ class GameTeam {
                 }
             }
         }
+        var noLinkQ = 
+        `SELECT Jammer.Name ` + + 
+        `WHERE Jammer.GameID = ${this.Game.ID} AND Jammer.UserID IS NULL`;
+            var noLinkTable = Query(noLinkQ, db);
+            if (noLinkTable != null)
+            {
+                for (var i = 0; i < noLinkTable.length; i++)
+                {
+                    var row = jTable[i];
+                    this.Links.push(new PersonLink(null, row[0]));
+                }
+            }
+
         if (this.Game.User != null && this.Game.User != this.Game.Team)
         {
             var submitter = GetUserID(this.Game.User, db);

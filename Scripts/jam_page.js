@@ -207,8 +207,9 @@ function GetJamPage()
             if (row.Entries[i].Team != null)
             {
                 var teamName = row.Entries[i].Team;
-                var teamhref = `/Team.html?teamid=${row.Entries[i].TeamID}`;
-                listItem.innerHTML += ` by <a href="${teamhref}">${teamName}</a>`;
+                var teamhref = row.Entries[i].TeamID != null && row.Entries[i].TeamID > 0? 
+                    `<a href="/Team.html?teamid=${row.Entries[i].TeamID}">` : ``;
+                listItem.innerHTML += ` by ${teamhref} ${teamName}</a>`;
             }
             else if (row.Entries[i].User != null) 
             {

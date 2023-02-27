@@ -109,19 +109,26 @@ function DrawTeam()
                 {
                     var person = game.Links[j];
                     var pLi = document.createElement('li');
-                    var pLink = document.createElement('a');
-                    pLi.id = "userid-" + person.ID;
-                    pLink.href = person.href;
-                    pLink.innerText = person.Name;
-                    if (game.Submitter != null && game.Submitter.ID == person.ID)
+                    if (person.ID == null || person.ID == 0 || person.href == null)
                     {
-                        var submitterIcon = document.createElement('span');
-                        submitterIcon.className = "submitter";
-                        submitterIcon.title = "Game Submitter";
-                        submitterIcon.innerText = "👑";
-                        pLink.appendChild(submitterIcon);
+                        pLi.innerText = person.Name;
                     }
-                    pLi.appendChild(pLink);
+                    else
+                    {
+                        var pLink = document.createElement('a');
+                        pLi.id = "userid-" + person.ID;
+                        pLink.href = person.href;
+                        pLink.innerText = person.Name;
+                        if (game.Submitter != null && game.Submitter.ID == person.ID)
+                        {
+                            var submitterIcon = document.createElement('span');
+                            submitterIcon.className = "submitter";
+                            submitterIcon.title = "Game Submitter";
+                            submitterIcon.innerText = "👑";
+                            pLink.appendChild(submitterIcon);
+                        }
+                        pLi.appendChild(pLink);
+                    }
                     pList.appendChild(pLi);
                 }
             }
